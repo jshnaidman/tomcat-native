@@ -589,8 +589,8 @@ TCN_IMPLEMENT_CALL(void, SSLContext, setQuietShutdown)(TCN_STDARGS, jlong ctx,
     SSL_CTX_set_quiet_shutdown(c->ctx, mode ? 1 : 0);
 }
 
-TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCipherSuite)(TCN_STDARGS, jlong ctx,
-                                                         jstring ciphers)
+static jboolean set_ciphers_internal(TCN_STDARGS, jlong ctx, jstring ciphers, 
+                              int(*cipher_func)(SSL_CTX *, const char *)) 
 {
     tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
     TCN_ALLOC_CSTRING(ciphers);
@@ -617,9 +617,9 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCipherSuite)(TCN_STDARGS, jlong ctx,
     memcpy(buf, SSL_CIPHERS_ALWAYS_DISABLED, strlen(SSL_CIPHERS_ALWAYS_DISABLED));
     memcpy(buf + strlen(SSL_CIPHERS_ALWAYS_DISABLED), J2S(ciphers), strlen(J2S(ciphers)));
     buf[len - 1] = '\0';
-    if (!SSL_CTX_set_cipher_list(c->ctx, buf)) {
+    if (!cipher_func(c->ctx, buf)) {
 #else
-    if (!SSL_CTX_set_cipher_list(c->ctx, J2S(ciphers))) {
+    if (!cipher_func(c->ctx, J2S(ciphers))) {
 #endif
         char err[256];
         ERR_error_string(SSL_ERR_get(), err);
@@ -632,6 +632,19 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCipherSuite)(TCN_STDARGS, jlong ctx,
     TCN_FREE_CSTRING(ciphers);
     return rv;
 }
+
+TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCipherSuite)(TCN_STDARGS, jlong ctx,
+                                                         jstring ciphers)
+{
+    return set_ciphers_internal(e, o, ctx, ciphers, SSL_CTX_set_cipher_list);
+}
+
+TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCipherSuitesTLS)(TCN_STDARGS, jlong ctx,
+                                                         jstring ciphers)
+{
+    return set_ciphers_internal(e, o, ctx, ciphers, SSL_CTX_set_ciphersuites);
+}
+
 
 TCN_IMPLEMENT_CALL(jobjectArray, SSLContext, getCiphers)(TCN_STDARGS, jlong ctx)
 {
@@ -2204,6 +2217,15 @@ TCN_IMPLEMENT_CALL(void, SSLContext, setQuietShutdown)(TCN_STDARGS, jlong ctx,
 }
 
 TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCipherSuite)(TCN_STDARGS, jlong ctx,
+                                                         jstring ciphers)
+{
+    UNREFERENCED_STDARGS;
+    UNREFERENCED(ctx);
+    UNREFERENCED(ciphers);
+    return JNI_FALSE;
+}
+
+TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCipherSuitesTLS)(TCN_STDARGS, jlong ctx,
                                                          jstring ciphers)
 {
     UNREFERENCED_STDARGS;

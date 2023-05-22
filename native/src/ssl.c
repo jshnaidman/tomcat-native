@@ -1981,9 +1981,8 @@ TCN_IMPLEMENT_CALL(jobjectArray, SSL, getCiphers)(TCN_STDARGS, jlong ssl)
     return array;
 }
 
-TCN_IMPLEMENT_CALL(jboolean, SSL, setCipherSuites)(TCN_STDARGS, jlong ssl,
-                                                         jstring ciphers)
-{
+static jboolean set_ciphers_internal(TCN_STDARGS, jlong ssl, jstring ciphers, 
+                             int(*cipher_func)(SSL *, const char *)) {
     jboolean rv = JNI_TRUE;
     SSL *ssl_ = J2P(ssl, SSL *);
     TCN_ALLOC_CSTRING(ciphers);
@@ -2001,7 +2000,7 @@ TCN_IMPLEMENT_CALL(jboolean, SSL, setCipherSuites)(TCN_STDARGS, jlong ssl,
         TCN_FREE_CSTRING(ciphers);
         return JNI_FALSE;
     }
-    if (!SSL_set_cipher_list(ssl_, J2S(ciphers))) {
+    if (!cipher_func(ssl_, J2S(ciphers))) {
         char err[256];
         ERR_error_string(SSL_ERR_get(), err);
         tcn_Throw(e, "Unable to configure permitted SSL ciphers (%s)", err);
@@ -2011,9 +2010,20 @@ TCN_IMPLEMENT_CALL(jboolean, SSL, setCipherSuites)(TCN_STDARGS, jlong ssl,
     return rv;
 }
 
+TCN_IMPLEMENT_CALL(jboolean, SSL, setCipherSuitesTLS)(TCN_STDARGS, 
+                                                      jlong ssl, 
+                                                      jstring ciphers) {
+    return set_ciphers_internal(e, o, ssl, ciphers, SSL_set_ciphersuites);
+}
+
+TCN_IMPLEMENT_CALL(jboolean, SSL, setCipherSuites)(TCN_STDARGS, 
+                                                   jlong ssl, 
+                                                   jstring ciphers) {
+    return set_ciphers_internal(e, o, ssl, ciphers, SSL_set_cipher_list);
+}
+
 TCN_IMPLEMENT_CALL(jbyteArray, SSL, getSessionId)(TCN_STDARGS, jlong ssl)
 {
-
     unsigned int len;
     const unsigned char *session_id;
     const SSL_SESSION *session;
@@ -2440,6 +2450,15 @@ TCN_IMPLEMENT_CALL(jobjectArray, SSL, getCiphers)(TCN_STDARGS, jlong ssl)
     return 0;
 }
 TCN_IMPLEMENT_CALL(jboolean, SSL, setCipherSuites)(TCN_STDARGS, jlong ssl,
+                                                         jstring ciphers)
+{
+    UNREFERENCED_STDARGS;
+    UNREFERENCED(ssl);
+    UNREFERENCED(ciphers);
+    tcn_ThrowException(e, "Not implemented");
+    return JNI_FALSE;
+}
+TCN_IMPLEMENT_CALL(jboolean, SSL, setCipherSuitesTLS)(TCN_STDARGS, jlong ssl,
                                                          jstring ciphers)
 {
     UNREFERENCED_STDARGS;

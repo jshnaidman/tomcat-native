@@ -167,6 +167,22 @@ public final class SSLContext {
         throws Exception;
 
     /**
+     * Cipher Suite available for negotiation in SSL handshake
+     * for TLSv1.3.
+     * <br>
+     * This directive uses a colon-separated cipher-spec string consisting
+     * of TLSv1.3 OpenSSL cipher suite names to configure the Cipher Suites the
+     * client is permitted to negotiate in the SSL handshake phase. 
+     * It applies to the standard SSL handshake when a connection is established. 
+     * @param ctx Server or Client context to use.
+     * @param ciphers An OpenSSL cipher specification meant for SSL_CTX_set_ciphersuites.
+     * @return <code>true</code> if the operation was successful
+     * @throws Exception An error occurred
+     */
+    public static native boolean setCipherSuitesTLS(long ctx, String ciphers)
+        throws Exception;
+
+    /**
      * Set File of concatenated PEM-encoded CA CRLs or
      * directory of PEM-encoded CA Certificates for Client Auth
      * <br>

@@ -752,6 +752,23 @@ public final class SSL {
             throws Exception;
 
     /**
+     * Sets the cipher suites available for negotiation in SSL handshake
+     * for TLSv1.3.
+     * <br>
+     * This directive uses a colon-separated cipher-spec string consisting
+     * of TLSv1.3 OpenSSL cipher suite names to configure the Cipher Suites the
+     * client is permitted to negotiate in the SSL handshake phase. 
+     * It applies to the standard SSL handshake when a connection is established. 
+     * @param ctx Server or Client context to use.
+     * @param ssl the SSL instance (SSL *)
+     * @param ciphers an SSL cipher specification
+     * @return <code>true</code> if the operation was successful
+     * @throws Exception An error occurred
+     */
+    public static native boolean setCipherSuitesTLS(long ssl, String ciphers)
+            throws Exception;
+
+    /**
      * Returns the ID of the session as byte array representation.
      *
      * @param ssl the SSL instance (SSL *)
